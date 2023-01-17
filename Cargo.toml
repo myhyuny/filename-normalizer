@@ -18,5 +18,5 @@ unicode-normalization = "0.1"
 winapi = { version = "0.3", features = [ "winnls" ] }
 
 [[bin]]
-name = "normailze"
+name = "normalize"
 path = "src/main.rs"

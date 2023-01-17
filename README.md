@@ -9,11 +9,13 @@ macOS와 Windows 에서 같은 저장공간을 사용하면 Windows에서 한글
 ### Terminal
 
 ```shell
-normalizer [Options] <Paths>...
+Usage: normalize [OPTIONS] <PATHS>...
+
+Arguments:
+  <PATHS>...  Paths
 
 Options:
-    -f [nfd|nfc|nfkd|nfkc]
-        Unicode form
-    -r
-        Recursive
+  -f <FORM>      Unicode form [default: nfc] [possible values: nfd, nfc, nfkd, nfkc]
+  -r             Recursive
+  -h, --help     Print help
 ```

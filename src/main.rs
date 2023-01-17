@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::{
     fs::{read_dir, rename},
     io::Error,
@@ -7,14 +7,26 @@ use std::{
 };
 use unicode_normalization::UnicodeNormalization;
 
+/// File name Unicode normalizer
 #[derive(Parser, Debug)]
-pub struct Args {
-    #[arg(short, default_value = "nfc")]
-    form: String,
+struct Args {
+    /// Unicode form
+    #[arg(short, value_enum, default_value_t = Form::NFC)]
+    form: Form,
+    /// Recursive
     #[arg(short, default_value_t = false)]
     recursive: bool,
+    /// Paths
     #[arg(required = true)]
     paths: Vec<PathBuf>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Form {
+    NFD,
+    NFC,
+    NFKD,
+    NFKC,
 }
 
 fn main() -> Result<(), Error> {
@@ -26,15 +38,11 @@ fn main() -> Result<(), Error> {
 
     let args = Args::parse();
 
-    let form = match args.form.as_str() {
-        "nfd" => |s: &str| s.nfd().collect::<String>(),
-        "nfc" => |s: &str| s.nfc().collect::<String>(),
-        "nfkd" => |s: &str| s.nfkd().collect::<String>(),
-        "nfkc" => |s: &str| s.nfkc().collect::<String>(),
-        e => {
-            eprintln!("{} is an undefined form.", e);
-            process::exit(1);
-        }
+    let form = match args.form {
+        Form::NFD => |s: &str| s.nfd().collect::<String>(),
+        Form::NFC => |s: &str| s.nfc().collect::<String>(),
+        Form::NFKD => |s: &str| s.nfkd().collect::<String>(),
+        Form::NFKC => |s: &str| s.nfkc().collect::<String>(),
     };
 
     for path in args.paths {
