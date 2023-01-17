@@ -1,0 +1,22 @@
+[package]
+name = "filename-normalizer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+codegen-units = 1
+opt-level = "s"
+lto = true
+
+[dependencies]
+clap = { version = "4", features = [ "derive" ] }
+unicode-normalization = "0.1"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = [ "winnls" ] }
+
+[[bin]]
+name = "normalize"
+path = "src/main.rs"
