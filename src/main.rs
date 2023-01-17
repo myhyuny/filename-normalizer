@@ -18,6 +18,12 @@ pub struct Args {
 }
 
 fn main() -> Result<(), Error> {
+    #[cfg(windows)]
+    unsafe {
+        use winapi::um::{wincon::SetConsoleOutputCP, winnls::CP_UTF8};
+        SetConsoleOutputCP(CP_UTF8);
+    }
+
     let args = Args::parse();
 
     let form = match args.form.as_str() {
@@ -31,14 +37,15 @@ fn main() -> Result<(), Error> {
         }
     };
 
-    if !args.recursive {
-        if let Some(path) = args.paths.iter().find(|&p| p.is_dir()) {
+    for path in args.paths {
+        if !path.exists() {
+            eprintln!("{} is not exists.", path.to_str().unwrap());
+            process::exit(1);
+        }
+        if !args.recursive && path.is_dir() {
             eprintln!("{} is directory.", path.to_str().unwrap());
             process::exit(1);
         }
-    }
-
-    for path in args.paths {
         normalize(path, args.recursive, form)?;
     }
 
@@ -47,10 +54,13 @@ fn main() -> Result<(), Error> {
 
 fn normalize(path: PathBuf, recursive: bool, form: fn(&str) -> String) -> Result<(), Error> {
     if recursive && path.is_dir() {
-        if let Ok(dir) = read_dir(&path) {
-            for result in dir {
-                normalize(result?.path(), recursive, form)?;
+        match read_dir(&path) {
+            Ok(dir) => {
+                for result in dir {
+                    normalize(result?.path(), recursive, form)?;
+                }
             }
+            Err(e) => eprintln!("{} - {}", path.to_str().unwrap(), e),
         }
     }
 
@@ -59,12 +69,7 @@ fn normalize(path: PathBuf, recursive: bool, form: fn(&str) -> String) -> Result
     if !normalized.eq(name) {
         let mut to = path.parent().map(|p| p.to_path_buf()).unwrap();
         to.push(&normalized);
-        println!(
-            "{}: {} -> {}",
-            path.to_str().unwrap(),
-            normalized.len(),
-            to.to_str().unwrap().len()
-        );
+        println!("{}", path.to_str().unwrap());
         rename(path, to)?;
     }
 
